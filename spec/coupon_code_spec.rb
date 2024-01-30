@@ -1,7 +1,8 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 
 RSpec.describe CouponCode do
-
   describe '.generate' do
     subject { described_class.generate }
 
@@ -21,7 +22,7 @@ RSpec.describe CouponCode do
     context 'with curse word characters' do
       before do
         # Sequence with a mix of curse word separators and other characters
-        # Checkdigit also can be curse word separator, so new part will be regenerated
+        # Checkdigit also can be curse word separator, so current part will be regenerated in this case
         allow(CouponCode).to receive(:random_symbol).and_return(*'ABUAFUBCA1FUCP'.chars)
       end
 
@@ -65,5 +66,4 @@ RSpec.describe CouponCode do
       end
     end
   end
-
 end
