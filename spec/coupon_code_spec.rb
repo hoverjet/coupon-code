@@ -4,6 +4,7 @@ RSpec.describe CouponCode do
 
   describe '.generate' do
     subject { described_class.generate }
+
     it { is_expected.not_to be_nil }
     it { is_expected.to match(/^[0-9A-Z-]+$/) }
     it { is_expected.to match(/^\w{4}-\w{4}-\w{4}$/) }
@@ -16,10 +17,23 @@ RSpec.describe CouponCode do
       subject { described_class.generate(parts: 2) }
       it { is_expected.to match(/^\w{4}-\w{4}$/) }
     end
+
+    context 'with curse word characters' do
+      before do
+        # Sequence with a mix of curse word separators and other characters
+        # Checkdigit also can be curse word separator, so new part will be regenerated
+        allow(CouponCode).to receive(:random_symbol).and_return(*'ABUAFUBCA1FUCP'.chars)
+      end
+
+      it 'avoids generating codes with offensive word excluded characters' do
+        disallowed_pairs = CouponCode::CURSE_WORD_SEPARATORS.product(CouponCode::CURSE_WORD_SEPARATORS).map(&:join)
+        disallowed_regex = Regexp.union(disallowed_pairs)
+        is_expected.not_to match(disallowed_regex)
+      end
+    end
   end
 
   describe '.validate' do
-
     it 'validates a good code' do
       expect(described_class.validate('1K7Q-CTFM-LMTC')).to eq('1K7Q-CTFM-LMTC')
     end
@@ -50,7 +64,6 @@ RSpec.describe CouponCode do
         it { expect(described_class.validate(*args)).not_to be_nil }
       end
     end
-
   end
 
 end
