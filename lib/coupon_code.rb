@@ -5,7 +5,7 @@ require 'securerandom'
 require 'digest/sha1'
 
 module CouponCode
-  SYMBOL = '0123456789ABCDEFGHJKLMNPQRTUVWXY'
+  SYMBOL = '23456789ABCDEFGHJKLMNPQRTUVWXY'
   PARTS  = 3
   PART_LENGTH = 4
   # Separators which will never be placed next to each other.
@@ -20,8 +20,8 @@ module CouponCode
       num_parts = options.fetch(:parts, PARTS)
       part_length = options.fetch(:part_length, PART_LENGTH)
       parts = []
-      (1..num_parts).each do
-        parts << generate_safe_code_part(part_length)
+      (1..num_parts).each do |part_index|
+        parts << generate_safe_code_part(part_index, part_length)
       end
       parts.join('-')
     end
@@ -45,16 +45,16 @@ module CouponCode
         k = SYMBOL.index(c)
         check = check * 19 + k
       end
-      SYMBOL[check % 31]
+      SYMBOL[check % (SYMBOL.length - 1)]
     end
 
     private
 
-    def generate_safe_code_part(part_length)
+    def generate_safe_code_part(part_index, part_length)
       loop do
         part = []
         part << next_valid_char(part) until part.length == part_length - 1
-        check_digit = checkdigit_alg_1(part, part.length)
+        check_digit = checkdigit_alg_1(part, part_index)
         return part.join + check_digit unless invalid_next_char?(part, check_digit)
       end
     end
