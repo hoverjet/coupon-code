@@ -14,9 +14,16 @@ RSpec.describe CouponCode do
       is_expected.not_to eq(code2)
     end
 
-    context '2 parts' do
+    context 'when 2 parts' do
       subject { described_class.generate(parts: 2) }
       it { is_expected.to match(/^\w{4}-\w{4}$/) }
+    end
+
+    context 'when custom part length' do
+      subject { described_class.generate(part_length: 5) }
+
+      it { is_expected.to match(/^[0-9A-Z-]+$/) }
+      it { is_expected.to match(/^\w{5}-\w{5}-\w{5}$/) }
     end
 
     context 'with curse word characters' do

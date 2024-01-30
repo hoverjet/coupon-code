@@ -7,7 +7,7 @@ require 'digest/sha1'
 module CouponCode
   SYMBOL = '0123456789ABCDEFGHJKLMNPQRTUVWXY'
   PARTS  = 3
-  LENGTH = 4
+  PART_LENGTH = 4
   # Separators which will never be placed next to each other.
   # "Curse Word Prevention" algorithm details can be found here
   # https://arcticicestudio.github.io/icecore-hashids/api/curse-word-prevention.html
@@ -16,23 +16,24 @@ module CouponCode
   CURSE_WORD_SEPARATORS = %w[C F H T U].freeze
 
   class << self
-    def generate(options = { parts: PARTS })
-      num_parts = options.delete(:parts)
+    def generate(options = {})
+      num_parts = options.fetch(:parts, PARTS)
+      part_length = options.fetch(:part_length, PART_LENGTH)
       parts = []
       (1..num_parts).each do
-        parts << generate_safe_code_part
+        parts << generate_safe_code_part(part_length)
       end
       parts.join('-')
     end
 
-    def validate(orig, num_parts = PARTS)
+    def validate(orig, num_parts = PARTS, part_length = PART_LENGTH)
       code = orig.upcase
       code.gsub!(/[^#{SYMBOL}]+/, '')
-      parts = code.scan(/[#{SYMBOL}]{#{LENGTH}}/)
+      parts = code.scan(/[#{SYMBOL}]{#{part_length}}/)
       return if parts.length != num_parts
 
       parts.each_with_index do |part, i|
-        data  = part[0...(LENGTH - 1)]
+        data  = part[0...(part_length - 1)]
         check = part[-1]
         return if check != checkdigit_alg_1(data.split(''), i + 1)
       end
@@ -49,10 +50,10 @@ module CouponCode
 
     private
 
-    def generate_safe_code_part
+    def generate_safe_code_part(part_length)
       loop do
         part = []
-        part << next_valid_char(part) until part.length == LENGTH - 1
+        part << next_valid_char(part) until part.length == part_length - 1
         check_digit = checkdigit_alg_1(part, part.length)
         return part.join + check_digit unless invalid_next_char?(part, check_digit)
       end
