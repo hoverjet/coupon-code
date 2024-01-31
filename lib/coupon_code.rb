@@ -26,17 +26,16 @@ module CouponCode
       parts.join('-')
     end
 
-    def validate(orig, num_parts = PARTS, part_length = PART_LENGTH)
+    def standartize(orig, options = {})
+      num_parts = options.fetch(:parts, PARTS)
+      part_length = options.fetch(:part_length, PART_LENGTH)
+
       code = orig.upcase
       code.gsub!(/[^#{SYMBOL}]+/, '')
       parts = code.scan(/[#{SYMBOL}]{#{part_length}}/)
-      return if parts.length != num_parts
 
-      parts.each_with_index do |part, i|
-        data  = part[0...(part_length - 1)]
-        check = part[-1]
-        return if check != checkdigit_alg_1(data.split(''), i + 1)
-      end
+      return unless valid?(parts, num_parts, part_length)
+
       parts.join('-')
     end
 
@@ -49,6 +48,17 @@ module CouponCode
     end
 
     private
+
+    def valid?(parts, num_parts, part_length)
+      return false if parts.length != num_parts
+
+      parts.each_with_index do |part, i|
+        data  = part[0...(part_length - 1)]
+        check = part[-1]
+        return false if check != checkdigit_alg_1(data.split(''), i + 1)
+      end
+      true
+    end
 
     def generate_safe_code_part(part_index, part_length)
       loop do
